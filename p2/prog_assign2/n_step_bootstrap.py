@@ -41,10 +41,11 @@ def on_policy_n_step_td(
                 for i in range(tau + 1, end_t + 1):
                     G += (gamma ** (i - tau - 1)) * traj[i - 1][2]
                 if tau + n < T:
-                    G += (gamma ** n) * V[tau + n]
-                V[tau] += alpha * (G - V[tau])
+                    G += (gamma ** n) * V[traj[tau + n][0]]
+                V[traj[tau][0]] += alpha * (G - V[traj[tau][0]])
             if tau + 1 == T:
                 break
+            t += 1
 
     return V
 
@@ -94,20 +95,16 @@ def off_policy_n_step_sarsa(
     Q = initQ
     gamma = env_spec.gamma
 
-    # Init the optimal policy
-    optActionProb = np.zeros((env.spec.nS, env.spec.nA))
-    optPolicy = np.zeros(env.spec.nS)
-    # Output the optimal policy pi
+    # Init the optimal policy with greedy approach
+    optActionProb = np.zeros((env_spec.nS, env_spec.nA))
+    optPolicy = np.zeros(env_spec.nS)
     # For each state
-    for s_i in range(env.spec.nS):
+    for s_i in range(env_spec.nS):
         # Calculate the Q value of each (state, action) pair
         q_val = []
-        for a_i in range(env.spec.nA):
+        for a_i in range(env_spec.nA):
             # Q value
-            temp_sum = 0
-            for next_s in range(env.spec.nS):
-                temp_sum += trans_func[s_i][a_i][next_s] * (reward_func[s_i][a_i][next_s] + gamma * V[next_s])
-            q_val.append(temp_sum)
+            q_val.append(Q[s_i][a_i])
         # Find argmax_a
         optimal_action = q_val.index(max(q_val))
         optActionProb[s_i][optimal_action] = 1.0
@@ -126,20 +123,28 @@ def off_policy_n_step_sarsa(
                 rho = 1
                 end_t = min(tau + n, T - 1)
                 for i in range(tau + 1, end_t + 1):
-                    rho *= ()
-
-
-
-
-
-                end_t = min(tau + n, T)
+                    s_i = traj[i][0]
+                    a_i = traj[i][1]
+                    rho *= float(pi.action_prob(s_i, a_i) / bpi.action_prob(s_i, a_i))
                 G = 0
+                end_t = min(tau + n, T)
                 for i in range(tau + 1, end_t + 1):
                     G += (gamma ** (i - tau - 1)) * traj[i - 1][2]
                 if tau + n < T:
-                    G += (gamma ** n) * V[tau + n]
-                V[tau] += alpha * (G - V[tau])
+                    G += (gamma ** n) * Q[traj[tau + n][0]][traj[tau + n][1]]
+                Q[traj[tau][0]][traj[tau][1]] += alpha * rho * (G - Q[traj[tau][0]][traj[tau][1]])
+                # Update pi
+                q_val = []
+                s_i = traj[tau][0]
+                for a_i in range(env_spec.nA):
+                    # Q value
+                    q_val.append(Q[s_i][a_i])
+                # Find argmax_a
+                optimal_action = q_val.index(max(q_val))
+                pi.optActionProb[s_i][optimal_action] = 1.0
+                pi.optPolicy[s_i] = optimal_action
             if tau + 1 == T:
                 break
+            t += 1
 
     return Q, pi
