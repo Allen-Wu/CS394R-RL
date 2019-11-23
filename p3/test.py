@@ -3,7 +3,7 @@ import gym
 from algo import semi_gradient_n_step_td
 from policy import Policy
 from tc import ValueFunctionWithTile
-# from nn import ValueFunctionWithNN
+from nn import ValueFunctionWithNN
 
 testing_states = np.array([[-.5, 0], [-0.2694817,  0.014904 ], [-1.2,  0. ], [-0.51103601,  0.06101282], [ 0.48690072,  0.04923175]])
 correct_values = np.array([-108, -76.5, -38.5, -18.2, -2])
@@ -40,4 +40,4 @@ def test_nn():
 
 if __name__ == "__main__":
     test_tile()
-    # test_nn()
+    test_nn()
