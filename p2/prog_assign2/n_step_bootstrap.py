@@ -141,6 +141,8 @@ def off_policy_n_step_sarsa(
                     q_val.append(Q[s_i][a_i])
                 # Find argmax_a
                 optimal_action = q_val.index(max(q_val))
+                for temp_a in range(env_spec.nA):
+                    pi.optActionProb[s_i][temp_a] = 0.0
                 pi.optActionProb[s_i][optimal_action] = 1.0
                 pi.optPolicy[s_i] = optimal_action
             if tau + 1 == T:
